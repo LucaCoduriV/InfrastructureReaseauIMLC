@@ -6,7 +6,7 @@ Import-Module 'Microsoft.PowerShell.Security'
 #importation du fichier CSV
 $utilisateurs = Import-Csv -Delimiter ";" -Path ".\utilisateurs.csv" 
 
-#Création des utilisateur depuis le fichier CSV
+#désactiver les utilisateusr depuis le fichier CSV
 foreach ($user in $utilisateurs){
     
 
