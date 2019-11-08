@@ -6,7 +6,7 @@ Import-Module 'Microsoft.PowerShell.Security'
 #importation du fichier CSV
 $utilisateurs = Import-Csv -Delimiter ";" -Path ".\utilisateurs.csv" 
 
-#Création des OU
+#Création des OU + les groupes s'il n'y pas d'erreur
 try{
     New-ADOrganizationalUnit -Name "Employes" -ProtectedFromAccidentalDeletion $False
     New-ADOrganizationalUnit -Name "Direction" -ProtectedFromAccidentalDeletion $False
@@ -19,7 +19,7 @@ try{
     NEW-ADGroup –name “dl_Info” –groupscope DomainLocal –path “OU=Informatique,OU=Employes,DC=IMLC,DC=CH”
 }
 catch{
-    echo "Erreur dans la création des OU"
+    echo "Erreur dans la création des OU et des groupes"
 }
 
 #Création des utilisateur depuis le fichier CSV
@@ -34,6 +34,7 @@ foreach ($user in $utilisateurs){
     $group = $user.group
     
 
+	#en fonction de ce qui se trouve dans le fichier csv on met l'utilisateur dans la bonne OU
     switch($user.office){
         "Graphisme" {$office = "OU=Graphisme,OU=Employes,DC=IMLC,DC=CH"}
         "Publicite" {$office = "OU=Publicite,OU=Employes,DC=IMLC,DC=CH"}
@@ -42,6 +43,7 @@ foreach ($user in $utilisateurs){
         default {$office = $null}    
     }
     
+    #création de chaque utilisateur dans le bon groupe avec un dossier personnel
      try {
             $path = "\\sc-srv01\Utilisateurs$\$login"
 
@@ -49,7 +51,7 @@ foreach ($user in $utilisateurs){
             Add-ADGroupMember -Identity $group -Members $login
 
 
-
+#création du dossier personnel avec tout les droits nécessaire
             if (-not (Test-Path $path)) { 
                 $acl = (md $path).GetAccessControl()
                 $perm = ($login + "@imlc.ch"),"FullControl","ContainerInherit,ObjectInherit","None","Allow"
